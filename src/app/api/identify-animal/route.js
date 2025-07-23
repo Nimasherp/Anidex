@@ -11,7 +11,7 @@ export async function POST(request) {
       return NextResponse.json(
         { error: "No image provided" },
         { status: 400 }
-      );
+      )
     }
 
     const fs = require("fs")
@@ -44,7 +44,7 @@ export async function POST(request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": 'Bearer ${openaiApiKey}'
+        "Authorization": `Bearer ${openaiApiKey}`
       },
       body: JSON.stringify({
         model : "gpt-4o-mini",
