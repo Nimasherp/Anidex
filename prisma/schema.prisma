@@ -40,9 +40,9 @@ model Session {
   @@index([userId])
 }
 
-model VernacularName {
+model vernacular_names {
   taxonid         BigInt  @id
-  vernacularName  String
+  vernacular_name  String
   language        String
   country         String?
 }

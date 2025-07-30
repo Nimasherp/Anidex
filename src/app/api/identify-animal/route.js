@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { prisma } from "../../../lib/prisma"
 
 export async function POST(request) {
 
@@ -21,7 +21,7 @@ export async function POST(request) {
     const imageBuffer = fs.readFileSync(imagePath)
     const base64Image = imageBuffer.toString("base64")
     const dataURI = `data:image/jpeg;base64,${base64Image}`
-
+    console.log("Prisma models disponibles :", Object.keys(prisma))
     const messages = [
       {
         role: "user",
@@ -72,15 +72,18 @@ export async function POST(request) {
       .split("(")[1]
       ?.replace(")", "")
       .trim()  // I don't know yet
-    const dbAnimal = await sql`
-      SELECT * FROM vernacular_names 
-      WHERE vernacular_name = LOWER(${commonName})
-      LIMIT 1
-    `  
-    if (dbAnimal.length > 0) {
+    const dbAnimal =  await prisma.vernacular_names.findFirst ({
+      where : {
+        vernacular_name : {
+          equals: commonName.toLowerCase(),
+          mode: "insensitive",
+        },
+      },
+    })
+    if (dbAnimal) {
       return NextResponse.json({
         found: true,
-        animal: dbAnimal[0],
+        animal: dbAnimal,
         identification: animalIdentification,
       })
     }
