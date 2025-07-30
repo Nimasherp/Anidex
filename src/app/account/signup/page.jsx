@@ -1,38 +1,29 @@
 "use client" 
-import React from "react" 
-import { useState } from "react" 
-import { useAuth } from "@/hooks/useAuth" 
+import { useRouter } from "next/navigation" 
+import { useState } from "react"
+
 
 export default function SignUpPage() {
-  const [error, setError] = useState(null) 
-  const [loading, setLoading] = useState(false) 
   const [email, setEmail] = useState("") 
   const [password, setPassword] = useState("") 
-
-  const { signUpWithCredentials } = useAuth() 
+  const [error, setError] = useState("") 
+  const router = useRouter() 
 
   const onSubmit = async (e) => {
     e.preventDefault() 
-    setLoading(true) 
-    setError(null) 
+    setError("") 
 
-    if (!email || !password) {
-      setError("Please fill in all fields") 
-      setLoading(false) 
-      return 
-    }
-
-    try {
-      await signUpWithCredentials({
-        email,
-        password,
-        callbackUrl: "/",
-        redirect: true,
-      }) 
-    } catch (err) {
-      setError(err.message || "Failed to sign up.") 
-    } finally {
-      setLoading(false) 
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+      headers: { "Content-Type": "application/json" },
+    }) 
+    
+    if (res.ok) {
+      router.push("/account/signin") 
+    } else {
+      const data = await res.json() 
+      setError(data.error || "Something went wrong") 
     }
   } 
 
@@ -89,10 +80,9 @@ export default function SignUpPage() {
 
           <button
             type="submit"
-            disabled={loading}
             className="w-full rounded-lg bg-[#357AFF] px-4 py-3 text-base font-medium text-white transition-colors hover:bg-[#2E69DE] focus:outline-none focus:ring-2 focus:ring-[#357AFF] focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Sign Up"}
+          Sign Up
           </button>
           <p className="text-center text-sm text-gray-600">
             Already have an account?{" "}

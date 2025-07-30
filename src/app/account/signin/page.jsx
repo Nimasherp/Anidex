@@ -1,41 +1,30 @@
 "use client"
-
-import { useAuth } from "@/hooks/useAuth" 
+import { useRouter } from "next/navigation" 
 import { useState } from "react" 
+import { signIn } from "next-auth/react"
 
 export default function SignInPage(){
-    const [error, setError] = useState(null)
-    const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-
-    const { signInWithCredentials } = useAuth()
+    const [error, setError] = useState(null)
+    const router = useRouter()
 
     const onSubmit = async (e) => {
-        e.preventDefault()
-        setLoading(true)
-        setError(null)
-        if(!email || !password) {
-            setError("Please fill all fields")
-            setLoading(false)
-            return
-        }
+      e.preventDefault()
+      setError(null)
 
-        try{
-            await signInWithCredentials({
-                email,
-                password,
-                callbackUrl: "/",
-                redirect: true,
-            })
-        }
-        catch (err) {
-          setError(err.message || "Failed to sign up.") 
-        } finally {
-          setLoading(false) 
-        }
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      })
+
+      if (result.error) {
+        setError("Invalid email or password")
+      } else {
+        router.push("/")
+      }
     }
-
     
 
     return (
@@ -91,10 +80,9 @@ export default function SignInPage(){
     
               <button
                 type="submit"
-                disabled={loading}
                 className="w-full rounded-lg bg-[#357AFF] px-4 py-3 text-base font-medium text-white transition-colors hover:bg-[#2E69DE] focus:outline-none focus:ring-2 focus:ring-[#357AFF] focus:ring-offset-2 disabled:opacity-50"
               >
-                {loading ? "Loading..." : "Sign In"}
+                Sign In
               </button>
               <p className="text-center text-sm text-gray-600">
                 Don't have an account?{" "}

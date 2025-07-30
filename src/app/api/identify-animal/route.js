@@ -74,7 +74,7 @@ export async function POST(request) {
       .trim()  // I don't know yet
     const dbAnimal = await sql`
       SELECT * FROM vernacular_names 
-      WHERE vernacularName = LOWER(${commonName})
+      WHERE vernacular_name = LOWER(${commonName})
       LIMIT 1
     `  
     if (dbAnimal.length > 0) {

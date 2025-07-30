@@ -1,12 +1,19 @@
 
 import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
 
 
 export async function POST(request) {
-  
+  const session = await getServerSession(authOptions)
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+  }
+
+  const userId = session.user.id
   try {
-    const { animalId, photoUrl, captureLocation, userId } = await request.json()
+    const { animalId, photoUrl, captureLocation } = await request.json()
     if(!userId){
       return NextResponse.json({ error: "Authentication required"}, { status: 401 })
     }

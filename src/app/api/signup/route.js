@@ -1,42 +1,33 @@
-import { sql } from "@/lib/db"   // this is your raw SQL connector
-import bcrypt from "bcrypt"  
-import { cookies } from "next/headers"
+import { NextResponse } from "next/server" 
+import { prisma } from "../../../lib/prisma"  
+import bcrypt from "bcrypt" 
 
-export async function POST(request) {
-  
+export async function POST(req) {
   try {
-    const { email, password } = await request.json()  
+    const { email, password } = await req.json() 
 
     if (!email || !password) {
-      console.log("Missing fields")  
-      return Response.json({ error: "Missing email or password" }, { status: 400 })  
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 }) 
     }
 
-    const [existingUser] = await sql`
-      SELECT * FROM users WHERE email = ${email}
-    `  
+    const existingUser = await prisma.user.findUnique({ where: { email } }) 
 
     if (existingUser) {
-      return Response.json({ error: "User already exists" }, { status: 409 })  
+      return NextResponse.json({ error: "Email already registered" }, { status: 400 }) 
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)  
+    const hashedPassword = await bcrypt.hash(password, 10) 
 
-    const [user] = await sql`
-      INSERT INTO users (email, password_hash)
-      VALUES (${email}, ${hashedPassword})
-      RETURNING id, email
-    `
-    cookies().set("userID", user.id.toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // example
-    })
-    return Response.json({ success: true, user })  
-  } catch (err) {
-    console.error("Signup failed", err)  
-    return Response.json({ error: "Server error" }, { status: 500 })  
+    await prisma.user.create({
+      data: {
+        email,
+        passwordHash: hashedPassword,
+      }
+    }) 
+
+    return NextResponse.json({ success: true }, { status: 201 }) 
+  } catch (error) {
+    console.error("Error in sign up:", error) 
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 }) 
   }
 }
-

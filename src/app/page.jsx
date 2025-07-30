@@ -1,13 +1,14 @@
 "use client" 
 import {useState, useEffect} from "react" 
-import { useUser } from "@/hooks/useUser" 
-import { useUpload } from "@/hooks/useUpload"
-import { useAuth } from "@/hooks/useAuth" 
+import { useSession, signIn, signOut } from "next-auth/react"
+import { useUpload } from "../hooks/useUpload"
+import Swal from 'sweetalert2'
 
 function MainComponent() {
-  // Hooks: user & auth
-  const { data: user, loading: userLoading } = useUser()
-  const { signInWithCredentials, signUpWithCredentials, signOut } = useAuth()
+  // next auth session
+  const { data: session, status } = useSession()
+  const user = session?.user || null
+  const userLoading = status === "loading"
 
   // Uploading
   const [file, setFile] = useState(null)
@@ -87,7 +88,6 @@ function MainComponent() {
           animalId: identifiedAnimal.animal.taxonid,
           photoUrl: image,
           captureLocation: { x: 0, y: 0 },
-          userId: user.id,
         }),
       })
 
@@ -98,7 +98,11 @@ function MainComponent() {
       const data = await response.json()
       if (data.success) {
         fetchCollection()
-        alert("Success! Animal added to your collection!")
+        Swal.fire({
+          title: "Success!",
+          text: "Animal added to your collection",
+          icon: "success"
+        })
       }
     } catch (err) {
       console.error(err)
