@@ -2,6 +2,8 @@
 import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { prisma } from "../../../lib/prisma"
 
 
 export async function POST(request) {
@@ -14,39 +16,34 @@ export async function POST(request) {
   const userId = session.user.id
   try {
     const { animalId, photoUrl, captureLocation } = await request.json()
-    if(!userId){
-      return NextResponse.json({ error: "Authentication required"}, { status: 401 })
-    }
     if (!animalId || !photoUrl || !captureLocation) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
-    // Check if animal exists
-    const [animal] = await sql`
-      SELECT * FROM vernacular_names WHERE taxonid = ${animalId}
-    `  
-    if (!animal) {
-      return NextResponse.json({ error: "Animal not found" }, { status: 404 })
-    }
+    
 
     // Check if already in collection
-    const [existingEntry] = await sql`
-      SELECT * FROM animals_collections 
-      WHERE user_id = ${userId} 
-      AND taxonid = ${animalId}
-    `  
+    const existingEntry = await prisma.userCollection.findFirst({
+      where : {
+        taxonId : animalId,
+        userId: userId,
+      }
+    }) 
 
     if (existingEntry) {
       return NextResponse.json({ error: "Animal already in collection" }, { status: 409 })
     }
 
     // Add to collection
-    const [newEntry] = await sql`
-      INSERT INTO animals_collections
-        (user_id, taxonid, photo_url, capturelocation, capture_at)
-      VALUES 
-        (${userId}, ${animalId}, ${photoUrl}, point(${captureLocation.x}, ${captureLocation.y}), NOW())
-      RETURNING *
-    `  
+    const newEntry = await prisma.userCollection.create({
+      data: {
+        userId: userId,
+        taxonId: animalId,
+        photoUrl: photoUrl,
+        latitude: captureLocation.x,
+        longitude: captureLocation.y,
+      }
+    })
+
     return NextResponse.json({
       success: true,
       collection: newEntry,

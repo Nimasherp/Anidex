@@ -21,7 +21,6 @@ export async function POST(request) {
     const imageBuffer = fs.readFileSync(imagePath)
     const base64Image = imageBuffer.toString("base64")
     const dataURI = `data:image/jpeg;base64,${base64Image}`
-    console.log("Prisma models disponibles :", Object.keys(prisma))
     const messages = [
       {
         role: "user",
@@ -80,6 +79,8 @@ export async function POST(request) {
         },
       },
     })
+    console.log(typeof(dbAnimal))
+    console.log(dbAnimal)
     if (dbAnimal) {
       return NextResponse.json({
         found: true,
