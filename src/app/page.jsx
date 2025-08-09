@@ -116,11 +116,10 @@ function MainComponent() {
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`)
       }
-
+      
       const data = await response.json()
       if (data.success) {
         setCollection(data.collections)
-        setAchievements(data.achievements)
       }
     } catch (err) {
       console.error(err)
@@ -237,7 +236,7 @@ function MainComponent() {
                 className="text-gray-600 hover:text-green-600 transition-colors font-roboto flex items-center space-x-1"
               >
                 <i className="fas fa-collection"></i>
-                <span>My Collection ({collection.length})</span>
+                <span>My Collection ( {collection.length} )</span>
               </a>
             </div>
             <button
